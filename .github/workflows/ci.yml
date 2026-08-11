@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npx vite build
+
+      # The README publishes the bundle size. A dependency that quietly triples
+      # it should fail here rather than land silently.
+      - name: Bundle size budget
+        if: matrix.node == '22'
+        run: |
+          bytes=$(cat dist/assets/*.js | wc -c)
+          echo "bundle: ${bytes} bytes"
+          if [ "$bytes" -gt 61440 ]; then
+            echo "bundle grew past the 60 kB budget"
+            exit 1
+          fi

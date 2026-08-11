@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+*.local
+
+.vercel
+
+.vercel/
+
+# Local tooling state — never belongs in a public repo
+.claude/
+.omc/
+.vercel/

@@ -1,0 +1,407 @@
+/*
+ * A dark, instrument-panel aesthetic: this is a tool for reading numbers while
+ * something moves, and a light theme beside a bright canvas makes the animation
+ * the least legible part of the page.
+ */
+
+:root {
+  --bg: #0b0f14;
+  --panel: #11161d;
+  --panel-raised: #161c25;
+  --line: #1f2833;
+  --line-strong: #2c3846;
+
+  --text: #e6edf3;
+  --text-muted: #8b98a8;
+  /* 4.90:1 on --panel. The previous #5a6675 measured 3.11:1 and carried every
+     small label in the interface, so the whole caption layer failed AA. */
+  --text-faint: #77869a;
+  /* Boundaries of interactive controls need 3:1 under WCAG 1.4.11; --line-strong
+     is 1.52:1 and stays for decorative rules only. */
+  --line-interactive: #54647a;
+
+  --accent: #22d3ee;
+  --accent-dim: #0e7490;
+  --danger: #f87171;
+
+  --radius: 10px;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* -- header --------------------------------------------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.brand__mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  /* Marks that the simulation is live, which is why it is a static halo and not
+     an animation: something blinking forever beside moving content is noise. */
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.14);
+  align-self: center;
+}
+
+.brand h1 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.brand p {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.button {
+  /* 44px minimum on the pointer target, per WCAG 2.5.8. The visual box stays
+     compact; the padding does the work. */
+  min-height: 44px;
+  padding: 7px 16px;
+  border: 1px solid var(--line-interactive);
+  border-radius: 7px;
+  background: var(--panel-raised);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.button:hover {
+  background: #1c232d;
+  border-color: #3a4757;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.button--primary {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.speed select {
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-interactive);
+  border-radius: 7px;
+  background: var(--panel-raised);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* -- stats ---------------------------------------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat__label {
+  color: var(--text-faint);
+  font-size: 10px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.stat__value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  /* Tabular figures stop the number jittering as digits change width — the
+     difference between a readable dashboard and a twitchy one. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- layout --------------------------------------------------------------- */
+
+.layout {
+  flex: 1;
+  min-height: 460px;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+}
+
+#stage {
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: block;
+}
+
+.controls {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset {
+  min-height: 44px;
+  padding: 5px 14px;
+  border: 1px solid var(--line-interactive);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.preset:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+.preset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.note {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--accent-dim);
+  border-radius: 6px;
+  background: rgba(34, 211, 238, 0.05);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.control__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.control__label output {
+  color: var(--text);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  width: 100%;
+  /* The track reads as 4px; the element is 44px so the thumb is actually
+     grabbable. Without this the pointer target was four pixels tall. */
+  height: 44px;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.segmented__item {
+  min-height: 44px;
+  padding: 7px 6px;
+  border: 1px solid var(--line-interactive);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.segmented__item:hover {
+  color: var(--text);
+}
+
+.segmented__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.segmented__item[aria-checked="true"] {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.footer {
+  color: var(--text-faint);
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.footer p {
+  margin: 0;
+}
+
+/* -- responsive ----------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    max-height: none;
+  }
+
+  #stage {
+    min-height: 380px;
+  }
+}
+
+/* Reduced motion, handled deliberately rather than with a blanket kill.
+   Hover and focus transitions are state feedback, so they shorten instead of
+   vanishing — a control that snaps between states is harder to follow, not
+   easier. The genuinely large motion here is the 60fps canvas, and CSS cannot
+   pause that: main.ts starts the simulation paused for these users and the
+   Play button says so. */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .preset,
+  .segmented__item {
+    transition-duration: 60ms;
+  }
+}

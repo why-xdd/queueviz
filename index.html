@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>queueviz — watch queues, backpressure and scheduling behave</title>
+    <meta
+      name="description"
+      content="An interactive simulation of the queueing behaviour that decides your tail latency: disciplines, backpressure, rate limiting and fair queueing."
+    />
+    <!-- Inlined so the page makes exactly one request and never 404s for it. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B0F14'/%3E%3Crect x='6' y='13' width='5' height='6' rx='1.5' fill='%2322D3EE'/%3E%3Crect x='13.5' y='13' width='5' height='6' rx='1.5' fill='%2322D3EE' opacity='.65'/%3E%3Crect x='21' y='13' width='5' height='6' rx='1.5' fill='%2322D3EE' opacity='.3'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true"></span>
+        <h1>queueviz</h1>
+        <p>the behaviour behind your tail latency, made watchable</p>
+      </div>
+
+      <div class="toolbar">
+        <button id="play" type="button" class="button button--primary">Pause</button>
+        <button id="reset" type="button" class="button">Reset</button>
+        <label class="speed">
+          <span class="visually-hidden">Simulation speed</span>
+          <select id="speed">
+            <option value="0.25">0.25×</option>
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="Live metrics">
+      <div class="stat">
+        <span class="stat__label">Offered load</span>
+        <span class="stat__value" id="stat-load">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Throughput</span>
+        <span class="stat__value" id="stat-throughput">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Queue depth</span>
+        <span class="stat__value" id="stat-depth">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">p50 latency</span>
+        <span class="stat__value" id="stat-p50">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">p99 latency</span>
+        <span class="stat__value" id="stat-p99">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Dropped</span>
+        <span class="stat__value" id="stat-drop">—</span>
+      </div>
+    </section>
+
+    <main class="layout">
+      <canvas
+        id="stage"
+        aria-label="Simulation of requests flowing through a queue to workers"
+      ></canvas>
+      <aside id="controls" class="controls" aria-label="Simulation controls"></aside>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Space to pause · R to reset · Every run is seeded, so the same settings
+        always produce the same trace.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
