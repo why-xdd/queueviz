@@ -13,7 +13,9 @@ Queue disciplines, backpressure, rate limiting and fair queueing — simulated, 
 
 ### [**Open the live simulation →**](https://queueviz.vercel.app)
 
-<a href="https://queueviz.vercel.app"><img src="docs/screenshot.png" alt="queueviz running at 50% offered load" width="100%" /></a>
+<a href="https://queueviz.vercel.app"><img src="docs/demo.gif" alt="queueviz at 90% offered load: the queue fills, the depth sparkline climbs, p99 passes two seconds" width="100%" /></a>
+
+*Recorded from the running page at 90% load — the preset called **the knee**.*
 
 </div>
 
@@ -50,7 +52,7 @@ Every preset is one idea, visible in under ten seconds.
 
 ### The comparison worth internalising
 
-<img src="docs/screenshot-wfq.png" alt="Weighted fair queueing under overload, showing per-tenant lanes" width="100%" />
+<img src="docs/demo-wfq.gif" alt="Weighted fair queueing at 150% load: three tenant lanes filling at different rates" width="100%" />
 
 Under identical overload, FIFO puts every tenant in one line — so the tenant
 sending ten times the traffic makes *everyone's* latency ten times worse.
